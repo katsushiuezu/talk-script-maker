@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Talk Script Maker (トークスクリプトメーカー)
 
-## Getting Started
+音声ファイルをアップロードして文字起こしを行い、AIが自動でトークスクリプト（台本）を作成するWebアプリです。
 
-First, run the development server:
+## 機能
+
+- 🎙 **音声文字起こし**: MP3, WAV, M4A などの音声ファイルを日本語で文字起こしします（OpenAI Whisper API使用）。
+- 📝 **トークスクリプト生成**: 文字起こし結果を元に、タイトル、要約、セクションごとの要点をまとめたスクリプトを自動生成します（OpenAI GPT-4o-mini使用）。
+- 📋 **ワンクリックコピー**: 生成されたスクリプトをクリップボードにコピーできます。
+
+## セットアップ手順
+
+### 1. 依存関係のインストール
+
+プロジェクトのフォルダで以下のコマンドを実行してください。
+
+```bash
+npm install
+```
+
+### 2. 環境変数の設定
+
+`.env.example` ファイルをコピーして `.env.local` を作成し、OpenAIのAPIキーを設定してください。
+
+```bash
+cp .env.example .env.local
+```
+
+`.env.local` をテキストエディタで開き、`OPENAI_API_KEY` にあなたのAPIキーを入力します。
+
+```env
+OPENAI_API_KEY=sk-your-api-key-here...
+```
+
+## 開発サーバーの起動
+
+以下のコマンドで開発サーバーを起動します。
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで [http://localhost:3000](http://localhost:3000) にアクセスしてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 本番ビルドと起動
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+本番環境用にビルドして起動する場合は、以下のコマンドを実行します。
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 使い方
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **音声アップロード**: 画面左上のエリアに音声ファイルをドラッグ＆ドロップするか、クリックして選択します。
+2. **文字起こし**: 「文字起こしを開始」ボタンを押します。しばらくすると下のエリアにテキストが表示されます。必要に応じて手動で修正できます。
+3. **スクリプト生成**: 「トークスクリプトを生成」ボタンを押します。右側のエリアに構造化されたスクリプトが表示されます。
+4. **コピー**: 右上の「コピー」ボタンで結果をクリップボードに保存できます。
