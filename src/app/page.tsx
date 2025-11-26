@@ -17,11 +17,12 @@ export default function Home() {
     const handleFileSelect = (selectedFile: File) => {
         setFile(selectedFile);
         setError(null);
-        // Reset other states when new file is selected
+        // 新しいファイルを選んだら前の結果はリセット
         setTranscription('');
         setScript(null);
     };
 
+    // ① 文字起こし
     const handleTranscribe = async () => {
         if (!file) return;
 
@@ -37,20 +38,38 @@ export default function Home() {
                 body: formData,
             });
 
-            const data = await response.json();
+            const contentType = response.headers.get('content-type') || '';
 
-            if (!response.ok) {
-                throw new Error(data.error || '文字起こしに失敗しました');
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '文字起こしに失敗しました');
+                }
+
+                // API が { text: '...' } を返す前提
+                setTranscription(data.text || '');
+            } else {
+                // JSON じゃなくて、ただの文字列（"Request En..." など）のとき
+                const text = await response.text();
+
+                if (!response.ok) {
+                    throw new Error(
+                        text || 'サーバーからエラーの応答が返ってきました',
+                    );
+                }
+
+                // 必要なら、そのまま文字起こし結果として使う
+                setTranscription(text);
             }
-
-            setTranscription(data.text);
         } catch (err: any) {
-            setError(err.message);
+            setError(err?.message || '文字起こし中にエラーが発生しました');
         } finally {
             setIsTranscribing(false);
         }
     };
 
+    // ② トークスクリプト生成
     const handleGenerateScript = async () => {
         if (!transcription) return;
 
@@ -66,15 +85,26 @@ export default function Home() {
                 body: JSON.stringify({ text: transcription }),
             });
 
-            const data = await response.json();
+            const contentType = response.headers.get('content-type') || '';
 
-            if (!response.ok) {
-                throw new Error(data.error || 'スクリプト生成に失敗しました');
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'スクリプト生成に失敗しました');
+                }
+
+                // ScriptView がそのまま受け取れる形で渡す
+                setScript(data);
+            } else {
+                // ここで JSON 以外のレスポンスを無理に JSON.parse しない！
+                const text = await response.text();
+                throw new Error(
+                    text || 'サーバーから予期しない応答が返ってきました',
+                );
             }
-
-            setScript(data);
         } catch (err: any) {
-            setError(err.message);
+            setError(err?.message || 'スクリプト生成中にエラーが発生しました');
         } finally {
             setIsGenerating(false);
         }
@@ -86,7 +116,9 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
                     <div className="flex items-center gap-2">
                         <Sparkles className="text-blue-600" />
-                        <h1 className="text-xl font-bold text-gray-900">トークスクリプトメーカー</h1>
+                        <h1 className="text-xl font-bold text-gray-900">
+                            トークスクリプトメーカー
+                        </h1>
                     </div>
                 </div>
             </header>
@@ -99,7 +131,7 @@ export default function Home() {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-12rem)]">
-                    {/* Left Column: Upload & Transcription */}
+                    {/* 左：アップロード＋文字起こし */}
                     <div className="flex flex-col gap-6 h-full overflow-y-auto pr-2">
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
                             <h2 className="text-lg font-semibold mb-4">1. 音声アップロード</h2>
@@ -158,7 +190,7 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {/* Right Column: Script Result */}
+                    {/* 右：スクリプト結果 */}
                     <div className="h-full overflow-hidden">
                         <ScriptView script={script} isLoading={isGenerating} />
                     </div>
